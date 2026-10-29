@@ -6,334 +6,347 @@ import requests
 import streamlit as st
 from PIL import Image
 
-# ==========================================
-# CONFIG
-# ==========================================
-API_URL = "https://floodvision-ai-2.onrender.com/predict"
-
+# =========================
+# PAGE CONFIG
+# =========================
 st.set_page_config(
     page_title="FloodVision AI",
-    page_icon="🌊",
+    page_icon="💜",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 
-# ==========================================
-# DARK PURPLE THEME
-# ==========================================
-st.markdown(
-    """
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
+# =========================
+# API CONFIG
+# =========================
+API_URL = "https://floodvision-ai-2.onrender.com/predict"
 
-    .stApp {
-        background:
-            radial-gradient(ellipse at top left, #24103D 0%, transparent 40%),
-            linear-gradient(145deg, #0B0712, #120B20 55%, #090610);
-        color: #F0E9FF;
-        font-family: 'Prompt', sans-serif;
-    }
+# =========================
+# PURPLE & WHITE THEME
+# =========================
+st.markdown("""
+<style>
+/* Main background */
+.stApp {
+    background: #F8F7FF;
+    color: #35284D;
+}
 
-    [data-testid="stHeader"] {
-        background: rgba(11, 7, 18, 0.8);
-    }
+/* Main content width */
+.block-container {
+    max-width: 1100px;
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+}
 
-    .block-container {
-        max-width: 1200px;
-        padding-top: 2rem;
-        padding-bottom: 3rem;
-    }
+/* Headings */
+h1, h2, h3 {
+    color: #4C347D !important;
+    font-weight: 700;
+}
 
-    h1, h2, h3, p, label, .stMarkdown {
-        font-family: 'Prompt', sans-serif;
-    }
+/* General text */
+p, label, .stMarkdown {
+    color: #514568;
+}
 
-    .hero {
-        background: linear-gradient(115deg, #1A0B2E, #35145B 60%, #5725A0);
-        border: 1px solid #7443B8;
-        border-radius: 24px;
-        padding: 2.4rem;
-        margin-bottom: 1.7rem;
-        box-shadow: 0 12px 40px rgba(139, 92, 246, 0.15);
-    }
+/* Header */
+.hero {
+    background: linear-gradient(135deg, #EDE7FF, #FFFFFF);
+    border: 1px solid #E5DDF8;
+    border-radius: 24px;
+    padding: 30px;
+    margin-bottom: 25px;
+    text-align: center;
+}
 
-    .hero-label {
-        color: #C4B5FD;
-        font-size: 0.8rem;
-        letter-spacing: 3px;
-        font-weight: 600;
-    }
+.hero-title {
+    color: #4C347D;
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
 
-    .hero h1 {
-        color: #FFFFFF;
-        font-size: clamp(2rem, 4vw, 3rem);
-        font-weight: 700;
-        margin: 0.5rem 0;
-    }
+.hero-subtitle {
+    color: #75658E;
+    font-size: 1rem;
+}
 
-    .hero p {
-        color: #DDD0FF;
-        line-height: 1.9;
-        margin-bottom: 0;
-    }
+/* White cards */
+.card {
+    background: #FFFFFF;
+    border: 1px solid #E8E0F7;
+    border-radius: 18px;
+    padding: 22px;
+    margin-bottom: 18px;
+}
 
-    .section-title {
-        color: #E9D5FF;
-        font-size: 1.35rem;
-        font-weight: 600;
-        margin: 1.4rem 0 0.35rem;
-    }
+/* File uploader */
+div[data-testid="stFileUploader"] {
+    background: #FFFFFF;
+    border: 1px solid #E5DDF8;
+    border-radius: 16px;
+    padding: 12px;
+}
 
-    .section-desc {
-        color: #B5A5CC;
-        font-size: 0.92rem;
-        margin-bottom: 1rem;
-    }
+[data-testid="stFileUploaderDropzone"] {
+    background: #FDFCFF;
+    border: 2px dashed #C8B8EF;
+    border-radius: 14px;
+}
 
-    [data-testid="stVerticalBlockBorderWrapper"] {
-        background: rgba(23, 14, 37, 0.85);
-        border: 1px solid #48266A;
-        border-radius: 20px;
-    }
+/* Buttons */
+.stButton > button {
+    background: #8B72D9;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 12px;
+    padding: 0.7rem 1.2rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
 
-    [data-testid="stFileUploader"] {
-        background: #130D20;
-        border: 1px dashed #9461D9;
-        border-radius: 15px;
-        padding: 1rem;
-    }
+.stButton > button:hover {
+    background: #7054BD;
+    color: #FFFFFF;
+    border: none;
+}
 
-    [data-testid="stFileUploader"] section {
-        background: transparent;
-    }
+/* Metrics */
+div[data-testid="stMetric"] {
+    background: #FFFFFF;
+    border: 1px solid #E8E0F7;
+    padding: 18px;
+    border-radius: 16px;
+}
 
-    [data-testid="stFileUploader"] small {
-        color: #C4B5FD;
-    }
+div[data-testid="stMetricLabel"] {
+    color: #75658E;
+}
 
-    .stButton > button {
-        background: linear-gradient(100deg, #7C3AED, #A855F7);
-        color: #FFFFFF;
-        border: 1px solid #B794F6;
-        border-radius: 12px;
-        min-height: 3rem;
-        font-weight: 600;
-        box-shadow: 0 0 20px rgba(139, 92, 246, 0.18);
-        transition: all 0.2s ease;
-    }
+div[data-testid="stMetricValue"] {
+    color: #4C347D;
+}
 
-    .stButton > button:hover {
-        background: linear-gradient(100deg, #6D28D9, #9333EA);
-        color: white;
-        border-color: #D8B4FE;
-        transform: translateY(-1px);
-    }
+/* Alerts */
+div[data-testid="stAlert"] {
+    border-radius: 12px;
+}
 
-    [data-testid="stMetric"] {
-        background: linear-gradient(145deg, #211331, #150D21);
-        border: 1px solid #58317C;
-        border-radius: 17px;
-        padding: 1.15rem;
-    }
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background: #F0EBFC;
+}
 
-    [data-testid="stMetricLabel"] {
-        color: #C4B5FD;
-    }
+/* Divider */
+hr {
+    border-color: #E5DDF8;
+}
 
-    [data-testid="stMetricValue"] {
-        color: #D8B4FE;
-        font-weight: 700;
-    }
+/* Hide Streamlit branding */
+#MainMenu {
+    visibility: hidden;
+}
 
-    [data-testid="stAlert"] {
-        border-radius: 14px;
-    }
+footer {
+    visibility: hidden;
+}
 
-    [data-testid="stImage"] img {
-        border-radius: 13px;
-    }
+header[data-testid="stHeader"] {
+    background: rgba(248, 247, 255, 0.8);
+}
+</style>
+""", unsafe_allow_html=True)
 
-    hr {
-        border-color: #392449;
-    }
-
-    .footer {
-        text-align: center;
-        color: #9F8CB8;
-        font-size: 0.82rem;
-        padding-top: 1.5rem;
-        margin-top: 2rem;
-        border-top: 1px solid #352344;
-        line-height: 1.9;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-# ==========================================
+# =========================
 # HEADER
-# ==========================================
-st.markdown(
-    """
-    <div class="hero">
-        <div class="hero-label">AI-POWERED FLOOD ANALYSIS</div>
-        <h1>🌊 FloodVision AI</h1>
-        <p>
-            ระบบวิเคราะห์ภาพน้ำท่วมด้วยปัญญาประดิษฐ์<br>
-            Intelligent Image Segmentation for Flood Assessment
-        </p>
+# =========================
+st.markdown("""
+<div class="hero">
+    <div class="hero-title">💜 FloodVision AI</div>
+    <div class="hero-subtitle">
+        AI-powered Flood Image Segmentation
+        <br>
+        วิเคราะห์ภาพและตรวจจับพื้นที่น้ำท่วมด้วยปัญญาประดิษฐ์
     </div>
-    """,
-    unsafe_allow_html=True,
-)
+</div>
+""", unsafe_allow_html=True)
 
-# ==========================================
-# UPLOAD
-# ==========================================
+# =========================
+# INTRODUCTION
+# =========================
+st.markdown("## 🌧️ วิเคราะห์ภาพน้ำท่วม")
 st.markdown(
-    '<div class="section-title">📷 วิเคราะห์ภาพน้ำท่วม | Flood Image Analysis</div>',
-    unsafe_allow_html=True,
-)
-st.markdown(
-    '<div class="section-desc">อัปโหลดภาพพื้นที่ แล้วให้ AI วิเคราะห์ผลเบื้องต้น</div>',
-    unsafe_allow_html=True,
+    "อัปโหลดภาพที่ต้องการตรวจสอบ แล้วให้ AI ช่วยระบุพื้นที่น้ำท่วม"
 )
 
-with st.container(border=True):
-    uploaded_file = st.file_uploader(
-        "เลือกภาพพื้นที่ที่ต้องการวิเคราะห์ (JPG, JPEG, PNG)",
-        type=["jpg", "jpeg", "png"],
-    )
+# =========================
+# IMAGE UPLOAD
+# =========================
+uploaded_file = st.file_uploader(
+    "📁 เลือกภาพที่ต้องการวิเคราะห์",
+    type=["jpg", "jpeg", "png"],
+    help="รองรับไฟล์ JPG, JPEG และ PNG",
+)
 
-    if uploaded_file is not None:
-        try:
-            original_image = Image.open(uploaded_file).convert("RGB")
+# =========================
+# ANALYZE IMAGE
+# =========================
+if uploaded_file is not None:
+    try:
+        image_bytes = uploaded_file.getvalue()
+        original_image = Image.open(
+            BytesIO(image_bytes)
+        ).convert("RGB")
 
-            st.caption(
-                f"ไฟล์: {uploaded_file.name} · "
-                f"ขนาด: {original_image.width} × {original_image.height} px"
-            )
+        st.markdown("### 🖼️ ภาพที่อัปโหลด")
 
-            st.image(
-                original_image,
-                caption="ภาพที่อัปโหลด | Uploaded Image",
-                use_container_width=True,
-            )
-
-            if st.button(
-                "🌊 เริ่มวิเคราะห์ภาพ | Analyze Image",
-                type="primary",
-                use_container_width=True,
-            ):
-                with st.spinner("AI กำลังวิเคราะห์ภาพ... Please wait."):
-                    response = requests.post(
-                        API_URL,
-                        files={
-                            "file": (
-                                uploaded_file.name,
-                                uploaded_file.getvalue(),
-                                uploaded_file.type or "image/jpeg",
-                            )
-                        },
-                        timeout=180,
-                    )
-
-                if response.status_code == 200:
-                    result = response.json()
-                    mask_data = result["mask"].split(",", 1)[1]
-                    mask_bytes = base64.b64decode(mask_data)
-
-                    mask_image = Image.open(
-                        BytesIO(mask_bytes)
-                    ).convert("L")
-
-                    st.session_state["flood_result"] = {
-                        "original": original_image.copy(),
-                        "mask": mask_image.copy(),
-                        "data": result,
-                        "filename": uploaded_file.name,
-                    }
-                    st.success("วิเคราะห์ภาพเสร็จแล้ว | Analysis complete")
-
-                else:
-                    st.error(
-                        f"วิเคราะห์ไม่สำเร็จ (HTTP {response.status_code})"
-                    )
-                    st.code(response.text[:1500])
-
-        except requests.exceptions.Timeout:
-            st.error("ระบบใช้เวลานานเกินไป กรุณาลองใหม่อีกครั้ง")
-
-        except requests.exceptions.RequestException as exc:
-            st.error("เชื่อมต่อ Backend ไม่สำเร็จ")
-            st.code(str(exc))
-
-        except Exception as exc:
-            st.error("เกิดข้อผิดพลาดระหว่างอ่านภาพหรือประมวลผล")
-            st.code(str(exc))
-
-# ==========================================
-# RESULTS
-# ==========================================
-saved = st.session_state.get("flood_result")
-
-if saved is not None:
-    result = saved["data"]
-
-    st.markdown("---")
-    st.markdown(
-        '<div class="section-title">📊 ผลการวิเคราะห์ | Analysis Results</div>',
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        '<div class="section-desc">เปรียบเทียบภาพต้นฉบับและผล Mask จากโมเดล AI</div>',
-        unsafe_allow_html=True,
-    )
-
-    left, right = st.columns(2, gap="large")
-
-    with left:
-        st.markdown("**🖼️ ภาพต้นฉบับ | Original Image**")
-        st.image(saved["original"], use_container_width=True)
-
-    with right:
-        st.markdown("**🗺️ ผลการทำนาย | Predicted Mask**")
-        st.image(saved["mask"], use_container_width=True)
-        st.caption("สีขาว = พื้นที่ที่โมเดลทำนายว่าเป็นน้ำท่วม")
-
-    metric1, metric2 = st.columns(2)
-
-    with metric1:
-        st.metric(
-            "สัดส่วนพิกเซลที่ทำนายว่าน้ำท่วม",
-            f"{result['flood_percent']:.2f}%",
+        st.image(
+            original_image,
+            caption="ภาพต้นฉบับ",
+            use_container_width=True,
         )
 
-    with metric2:
-        st.metric("Model Input Size", "256 × 256 px")
+        if st.button(
+            "✨ วิเคราะห์พื้นที่น้ำท่วม",
+            use_container_width=True,
+        ):
+            with st.spinner(
+                "กำลังวิเคราะห์ภาพ กรุณารอสักครู่..."
+            ):
+                response = requests.post(
+                    API_URL,
+                    files={
+                        "file": (
+                            uploaded_file.name,
+                            image_bytes,
+                            uploaded_file.type
+                            or "application/octet-stream",
+                        )
+                    },
+                    timeout=180,
+                )
 
-    st.markdown("### ✨ สรุปผล | Analysis Summary")
-    st.info(result.get("summary", "ไม่มีข้อมูลสรุปจาก API"))
+            if response.ok:
+                result = response.json()
 
-    st.caption(
-        "หมายเหตุ: เปอร์เซ็นต์เป็นสัดส่วนพิกเซลที่โมเดลทำนาย "
-        "ไม่ใช่พื้นที่จริงทางภูมิศาสตร์หรือการยืนยันสถานการณ์จริง"
-    )
+                # Read result from API
+                flood_percent = float(
+                    result.get("flood_percent", 0)
+                )
+                summary = result.get(
+                    "summary",
+                    "วิเคราะห์ภาพเสร็จเรียบร้อย",
+                )
 
-    if st.button("🗑️ ล้างผลการวิเคราะห์"):
-        st.session_state.pop("flood_result", None)
-        st.rerun()
+                # Decode predicted mask
+                mask_data = result.get("mask")
 
-# ==========================================
-# FOOTER
-# ==========================================
-st.markdown(
-    """
-    <div class="footer">
-        🌊 FloodVision AI · AI-Powered Flood Image Analysis<br>
-        ระบบสนับสนุนการวิเคราะห์ภาพน้ำท่วมด้วย AI
+                if not mask_data:
+                    st.error(
+                        "Backend ไม่ได้ส่งข้อมูล Mask กลับมา "
+                        "โปรดตรวจสอบชื่อฟิลด์ใน API"
+                    )
+                    st.stop()
+
+                # Support both raw base64 and data URL
+                if "," in mask_data:
+                    mask_data = mask_data.split(",", 1)[1]
+
+                mask_bytes = base64.b64decode(mask_data)
+                mask_image = Image.open(
+                    BytesIO(mask_bytes)
+                ).convert("RGB")
+
+                st.markdown("---")
+                st.markdown("## 📊 ผลการวิเคราะห์")
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    st.markdown("### ภาพต้นฉบับ")
+                    st.image(
+                        original_image,
+                        use_container_width=True,
+                    )
+
+                with col2:
+                    st.markdown("### พื้นที่น้ำท่วมที่ AI ตรวจพบ")
+                    st.image(
+                        mask_image,
+                        use_container_width=True,
+                    )
+
+                st.markdown("### 💧 สรุปผล")
+
+                metric_col1, metric_col2 = st.columns(2)
+
+                with metric_col1:
+                    st.metric(
+                        "พื้นที่น้ำท่วมที่ตรวจพบ",
+                        f"{flood_percent:.2f}%",
+                    )
+
+                with metric_col2:
+                    st.metric(
+                        "ขนาดภาพที่อัปโหลด",
+                        f"{original_image.width} × "
+                        f"{original_image.height}",
+                    )
+
+                st.info(summary)
+
+                st.caption(
+                    "หมายเหตุ: ผลลัพธ์เป็นการประมาณจากโมเดล AI "
+                    "ควรตรวจสอบกับภาพจริงก่อนนำไปใช้ตัดสินใจ"
+                )
+
+            else:
+                st.error(
+                    f"ไม่สามารถวิเคราะห์ภาพได้ "
+                    f"(HTTP {response.status_code})"
+                )
+                with st.expander("รายละเอียดข้อผิดพลาด"):
+                    st.code(response.text[:2000])
+
+    except requests.exceptions.Timeout:
+        st.error(
+            "การวิเคราะห์ใช้เวลานานเกินไป "
+            "กรุณาลองใหม่อีกครั้ง"
+        )
+
+    except requests.exceptions.RequestException as e:
+        st.error(
+            "เชื่อมต่อ Backend ไม่สำเร็จ "
+            "กรุณาตรวจสอบสถานะ API"
+        )
+        st.caption(str(e))
+
+    except Exception as e:
+        st.error("เกิดข้อผิดพลาดขณะอ่านภาพหรือแสดงผล")
+        st.caption(str(e))
+
+else:
+    st.markdown("""
+    <div class="card">
+        <h3>✨ เริ่มต้นใช้งาน</h3>
+        <p>
+            1. เลือกภาพน้ำท่วมหรือภาพพื้นที่ที่ต้องการตรวจสอบ
+            <br>
+            2. กดปุ่มวิเคราะห์พื้นที่น้ำท่วม
+            <br>
+            3. ตรวจสอบ Mask และเปอร์เซ็นต์พื้นที่น้ำท่วม
+        </p>
     </div>
-    """,
+    """, unsafe_allow_html=True)
+
+# =========================
+# FOOTER
+# =========================
+st.markdown("---")
+st.markdown(
+    "<p style='text-align:center; color:#8B7BA5;'>"
+    "FloodVision AI · Flood Image Segmentation"
+    "</p>",
     unsafe_allow_html=True,
 )
